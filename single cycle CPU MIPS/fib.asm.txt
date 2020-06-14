@@ -1,0 +1,27 @@
+# fib.asm Berechnet die n-te Fibonaci Zahl
+
+fib: addi $s3, $s0, 8 # initialisiere Register 3 mit n = 8 
+     addi $s4, $s0, 1 # initialisiere Register 4 mit f1 = 1 
+     addi $s5, $s0, -1 # initialisiere Register 5 mit f2 = -1
+     
+loop: beq $s3, $s0, end # Fertig mit der Schleife wenn n = 0     
+      add $s4, $s4, $s5 # f1 = f1 + f2
+      sub $s5, $s4, $s5 # f2 = f1 - f2
+      addi $s3, $s3, -1 # n = n - 1
+      #sw $4, 0x00002000($s0) # store result in address 0x2000
+      # warten
+      j loop
+      
+end: sw $4, 0x00002000($s0) # store result in address 0x2000
+
+-- OpCodesHex
+
+22130008
+22140001
+2215ffff
+12700004
+0295a020
+0295a822
+2273ffff
+08100003
+ae042000
