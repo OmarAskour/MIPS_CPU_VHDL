@@ -1,0 +1,274 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx leaf cells in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
+
+entity regfile is
+  generic ( constant addressWidth: integer := 5;
+            constant buswidth: integer := 32;
+            constant numberOfRegisters: integer := 32);
+  Port ( addr_Ra : in std_logic_vector(addressWidth-1 downto 0);
+         addr_Rb : in std_logic_vector(addressWidth-1 downto 0);
+         addr_Rc : in std_logic_vector(addressWidth-1 downto 0);
+         dataIn_Rc : in std_logic_vector(buswidth-1 downto 0);
+         dataOut_Ra : out std_logic_vector(buswidth-1 downto 0);
+         dataOut_Rb : out std_logic_vector(buswidth-1 downto 0);
+         writeEN : in std_logic;
+         reset : in std_logic;
+         clk : in std_logic );
+end regfile;
+
+architecture Behavioral of regfile is
+    type registers is array(0 to numberOfRegisters-1) of std_logic_vector(buswidth-1 downto 0);
+    signal regFile : registers;
+    signal RegToWriteOneHot : std_logic_vector(buswidth-1 downto 0); -- Signal auf dem die zu schreibenden Daten liegen
+begin 
+  
+    register_FFs : process(clk) --FF Speicher fr Register = Schaltwerk
+        begin
+            if rising_edge(clk) then -- synchroner Reset der FFs
+                if (reset = '1') then -- alle Register asynchron auf 0 setzen
+                    for ii in 0 to (buswidth-1) loop 
+                        regFile(ii) <= (others => '0'); 
+                    end loop;
+                    -- auch mit: regFile <= (others => (others => '0');
+                else
+                    for ii in 0 to (buswidth-1) loop 
+                        if (RegToWriteOneHot(ii) = '1' and writeEN = '1') then
+                            regFile(ii) <= dataIn_Rc; 
+                        end if;
+                    end loop;
+                end if;
+            end if;
+        end process;
+      
+
+        
+    writeDecoder : process(addr_Rc) -- kombinatorischer Prozess fr einen OneHot Decoder
+        begin   
+            case addr_Rc is
+                when "00000" =>
+                    RegToWriteOneHot <= (0 => '1', others => '0');
+                when "00001" =>
+                    RegToWriteOneHot <= (1 => '1', others => '0');
+                when "00010" =>
+                    RegToWriteOneHot <= (2 => '1', others => '0');
+                when "00011" =>
+                    RegToWriteOneHot <= (3 => '1', others => '0');
+                when "00100" =>
+                    RegToWriteOneHot <= (4 => '1', others => '0'); 
+                when "00101" =>
+                    RegToWriteOneHot <= (5 => '1', others => '0');
+                when "00110" =>
+                    RegToWriteOneHot <= (6 => '1', others => '0');
+                when "00111" =>
+                    RegToWriteOneHot <= (7 => '1', others => '0');
+                when "01000" =>
+                    RegToWriteOneHot <= (8 => '1', others => '0');
+                when "01001" =>
+                    RegToWriteOneHot <= (9 => '1', others => '0');
+                when "01010" =>
+                    RegToWriteOneHot <= (10 => '1', others => '0');
+                when "01011" =>
+                    RegToWriteOneHot <= (11 => '1', others => '0');
+                when "01100" =>
+                    RegToWriteOneHot <= (12 => '1', others => '0');
+                when "01101" =>
+                    RegToWriteOneHot <= (13 => '1', others => '0');
+                when "01110" =>
+                    RegToWriteOneHot <= (14 => '1', others => '0');
+                when "01111" =>
+                    RegToWriteOneHot <= (15 => '1', others => '0');
+                when "10000" =>
+                    RegToWriteOneHot <= (16 => '1', others => '0');
+                when "10001" =>
+                    RegToWriteOneHot <= (17 => '1', others => '0');
+                when "10010" =>
+                    RegToWriteOneHot <= (18 => '1', others => '0');
+                when "10011" =>
+                    RegToWriteOneHot <= (19 => '1', others => '0');
+                when "10100" =>
+                    RegToWriteOneHot <= (20 => '1', others => '0');  
+                when "10101" =>
+                    RegToWriteOneHot <= (21 => '1', others => '0');
+                when "10110" =>
+                    RegToWriteOneHot <= (22 => '1', others => '0');
+                when "10111" =>
+                    RegToWriteOneHot <= (23 => '1', others => '0');
+                when "11000" =>
+                    RegToWriteOneHot <= (24 => '1', others => '0');
+                when "11001" =>
+                    RegToWriteOneHot <= (25 => '1', others => '0');
+                when "11010" =>
+                    RegToWriteOneHot <= (26 => '1', others => '0');
+                when "11011" =>
+                    RegToWriteOneHot <= (27 => '1', others => '0');
+                when "11100" =>
+                    RegToWriteOneHot <= (28 => '1', others => '0');
+                when "11101" =>
+                    RegToWriteOneHot <= (29 => '1', others => '0');
+                when "11110" =>
+                    RegToWriteOneHot <= (30 => '1', others => '0');
+                when "11111" =>
+                    RegToWriteOneHot <= (31 => '1', others => '0');
+                when others => 
+                    RegToWriteOneHot <= (others => '0');
+            end case;
+    end process;
+    
+     dataOut_Ra <= regFile(to_integer(unsigned(addr_Ra))); -- ersetzt process multiplexer_Ra unter Verwendung von use IEEE.NUMERIC_STD.ALL;
+     
+     dataOut_Rb <= regFile(to_integer(unsigned(addr_Rb))); -- ersetzt process multiplexer_Rb unter Verwendung von use IEEE.NUMERIC_STD.ALL;
+
+--    multiplexer_Ra : process(regFile, addr_Ra) -- kombinatorischer Prozess fr Multiplexer (arbeitet asynchron)
+--        begin
+--            case addr_Ra is
+--                when "00000" =>
+--                    dataOut_Ra <= regFile(0);
+--                when "00001" =>
+--                    dataOut_Ra <= regFile(1);
+--                when "00010" =>
+--                    dataOut_Ra <= regFile(2);
+--                when "00011" =>
+--                    dataOut_Ra <= regFile(3);
+--                when "00100" =>
+--                    dataOut_Ra <= regFile(4);    
+--                when "00101" =>
+--                    dataOut_Ra <= regFile(5);
+--                when "00110" =>
+--                    dataOut_Ra <= regFile(6);
+--                when "00111" =>
+--                    dataOut_Ra <= regFile(7);
+--                when "01000" =>
+--                    dataOut_Ra <= regFile(8);
+--                when "01001" =>
+--                    dataOut_Ra <= regFile(9);
+--                when "01010" =>
+--                    dataOut_Ra <= regFile(10);
+--                when "01011" =>
+--                    dataOut_Ra <= regFile(11);
+--                when "01100" =>
+--                    dataOut_Ra <= regFile(12);
+--                when "01101" =>
+--                    dataOut_Ra <= regFile(13);
+--                when "01110" =>
+--                    dataOut_Ra <= regFile(14);
+--                when "01111" =>
+--                    dataOut_Ra <= regFile(15);
+--                when "10000" =>
+--                    dataOut_Ra <= regFile(16);
+--                when "10001" =>
+--                    dataOut_Ra <= regFile(17);
+--                when "10010" =>
+--                    dataOut_Ra <= regFile(18);
+--                when "10011" =>
+--                    dataOut_Ra <= regFile(19);
+--                when "10100" =>
+--                    dataOut_Ra <= regFile(20);    
+--                when "10101" =>
+--                    dataOut_Ra <= regFile(21);
+--                when "10110" =>
+--                    dataOut_Ra <= regFile(22);
+--                when "10111" =>
+--                    dataOut_Ra <= regFile(23);
+--                when "11000" =>
+--                    dataOut_Ra <= regFile(24);
+--                when "11001" =>
+--                    dataOut_Ra <= regFile(25);
+--                when "11010" =>
+--                    dataOut_Ra <= regFile(26);
+--                when "11011" =>
+--                    dataOut_Ra <= regFile(27);
+--                when "11100" =>
+--                    dataOut_Ra <= regFile(28);
+--                when "11101" =>
+--                    dataOut_Ra <= regFile(29);
+--                when "11110" =>
+--                    dataOut_Ra <= regFile(30);
+--                when "11111" =>
+--                    dataOut_Ra <= regFile(31);
+--                when others => 
+--                    dataOut_Ra <= "00000000000000000000000000000000";
+--             end case;
+--        end process;
+        
+--    multiplexer_Rb : process(regFile, addr_Rb) -- kombinatorischer Prozess fr Multiplexer (arbeitet asynchron)
+--        begin
+--            case addr_Rb is
+--                when "00000" =>
+--                    dataOut_Rb <= regFile(0);
+--                when "00001" =>
+--                    dataOut_Rb <= regFile(1);
+--                when "00010" =>
+--                    dataOut_Rb <= regFile(2);
+--                when "00011" =>
+--                    dataOut_Rb <= regFile(3);
+--                when "00100" =>
+--                    dataOut_Rb <= regFile(4);    
+--                when "00101" =>
+--                    dataOut_Rb <= regFile(5);
+--                when "00110" =>
+--                    dataOut_Rb <= regFile(6);
+--                when "00111" =>
+--                    dataOut_Rb <= regFile(7);
+--                when "01000" =>
+--                    dataOut_Rb <= regFile(8);
+--                when "01001" =>
+--                    dataOut_Rb <= regFile(9);
+--                when "01010" =>
+--                    dataOut_Rb <= regFile(10);
+--                when "01011" =>
+--                    dataOut_Rb <= regFile(11);
+--                when "01100" =>
+--                    dataOut_Rb <= regFile(12);
+--                when "01101" =>
+--                    dataOut_Rb <= regFile(13);
+--                when "01110" =>
+--                    dataOut_Rb <= regFile(14);
+--                when "01111" =>
+--                    dataOut_Rb <= regFile(15);
+--                when "10000" =>
+--                    dataOut_Rb <= regFile(16);
+--                when "10001" =>
+--                    dataOut_Rb <= regFile(17);
+--                when "10010" =>
+--                    dataOut_Rb <= regFile(18);
+--                when "10011" =>
+--                    dataOut_Rb <= regFile(19);
+--                when "10100" =>
+--                    dataOut_Rb <= regFile(20);    
+--                when "10101" =>
+--                    dataOut_Rb <= regFile(21);
+--                when "10110" =>
+--                    dataOut_Rb <= regFile(22);
+--                when "10111" =>
+--                    dataOut_Rb <= regFile(23);
+--                when "11000" =>
+--                    dataOut_Rb <= regFile(24);
+--                when "11001" =>
+--                    dataOut_Rb <= regFile(25);
+--                when "11010" =>
+--                    dataOut_Rb <= regFile(26);
+--                when "11011" =>
+--                    dataOut_Rb <= regFile(27);
+--                when "11100" =>
+--                    dataOut_Rb <= regFile(28);
+--                when "11101" =>
+--                    dataOut_Rb <= regFile(29);
+--                when "11110" =>
+--                    dataOut_Rb <= regFile(30);
+--                when "11111" =>
+--                    dataOut_Rb <= regFile(31);
+--                when others => 
+--                    dataOut_Rb <= "00000000000000000000000000000000";
+--             end case;
+--        end process;
+        
+end Behavioral;
